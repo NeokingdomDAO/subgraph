@@ -1,10 +1,10 @@
-*For the graph-node configuration, check [./provision](./provision.md).*
+_For the graph-node configuration, check [./provision](./provision)._
 
 # Connect to the production server
 
-To manage containers, update the subgraph: `ssh worker@api.neokingdom.org`
+To manage containers, update the subgraph: `ssh worker@api2.neokingdom.org`
 
-To admin the server: `ssh root@api.neokingdom.org`
+To admin the server: `ssh root@api2.neokingdom.org`
 
 ## Troubleshooting
 
@@ -12,7 +12,7 @@ To admin the server: `ssh root@api.neokingdom.org`
 
 Make sure you've updated all contract addresses (if https://github.com/TelediskoDAO/subgraph/issues/9 has not been implemented) in the `dao/subgraph.yaml` file. Update `startBlock` if needed.
 
-Connect to worker@api.neokingdom.org, run `tmux attach` to connect to the current tmux session, go to `/home/worker/subgraph/dao`, run 
+Connect to worker@api.neokingdom.org, run `tmux attach` to connect to the current tmux session, go to `/home/worker/subgraph/dao`, run
 
 - staging instance: `pnpm run remove-local ; pnpm run create-local ; pnpm deploy-staging`
 - production instance: `pnpm run remove-local ; pnpm run create-local ; pnpm deploy-production`
@@ -32,12 +32,13 @@ Solution: stop docker compose, remove `/home/worker/subgraph/data` dir, restart 
 See: https://github.com/graphprotocol/graph-node/issues/3699
 
 Solution:
+
 - check if the testnet has been restarted and recreated using a new genesis file: https://github.com/evmos/testnets
 - if so, check the new lowest block number
 - update the lowest block number in `docker-compose.yml`, env variable `GRAPH_ETHEREUM_GENESIS_BLOCK_NUMBER`
 
-
 # Installation
+
 ```
 npm install -g @graphprotocol/graph-cli
 ```
@@ -45,6 +46,7 @@ npm install -g @graphprotocol/graph-cli
 # Local development
 
 ## Setup
+
 ```
 # make sure your env contains the following variable
 ETHEREUM=<tevmos:https://eth.bd.evmos.dev:8545 | evmos:https://eth.bd.evmos.org:8545>
@@ -59,6 +61,7 @@ docker-compose up
 ```
 
 ## Deploy locally
+
 ```
 graph create --node http://localhost:8020/ <subgraph-name>
 graph init --product hosted-service --from-contract <address> --allow-simple-name --index-events --contract-name <contract-name> --abi <dir> --network mainnet --protocol ethereum <subgraph-name>
