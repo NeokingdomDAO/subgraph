@@ -1,7 +1,7 @@
 # Set up a server
 
 - Create a new VSP
-- Run `provide.sh`
+- Run `EMAIL=your@email DOMAIN=your.domain provide.sh`
 - Now log out, and log in with `worker`
 - Everything is ready in the `subgraph` dir
 - Go to `provide`
