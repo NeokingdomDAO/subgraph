@@ -21,6 +21,7 @@ install_essentials() {
         curl \
         git \
         gnupg \
+        jq \
         snapd \
         software-properties-common \
         tmux

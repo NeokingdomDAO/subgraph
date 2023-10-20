@@ -20,6 +20,7 @@ services:
       postgres_db: graph-node
       ipfs: "ipfs:5001"
       ethereum: "${GRAPH_ETHEREUM_ENDPOINT}"
+      GRAPH_ETHEREUM_GENESIS_BLOCK_NUMBER: ${GRAPH_ETHEREUM_GENESIS_BLOCK_NUMBER}
       GRAPH_LOG: info
   ipfs:
     image: ipfs/kubo:v0.14.0
