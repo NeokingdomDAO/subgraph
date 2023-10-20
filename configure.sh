@@ -37,7 +37,7 @@ sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.
 
 
 # Configure tmux
-cat > .tmux.conf <<EOF
+cat > ~/.tmux.conf <<EOF
 set -s escape-time 1
 # set -g mouse on
 # remap prefix from 'C-b' to 'C-a'
