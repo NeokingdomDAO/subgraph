@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+PROGRESS_FILE=".progress"
+
 # Check if EMAIL and DOMAIN are defined
 validate_variables() {
     if [ -z "$EMAIL" ] || [ -z "$DOMAIN" ]; then
@@ -22,6 +24,12 @@ install_essentials() {
         snapd \
         software-properties-common \
         tmux
+}
+
+set_hostname() {
+    echo "$DOMAIN" >/etc/hostname
+    hostnamectl set-hostname "$DOMAIN"
+    sed -i "s/127.0.1.1.*/127.0.1.1\t$DOMAIN/g" /etc/hosts
 }
 
 # Configure Firewall
@@ -127,6 +135,49 @@ install_configure_certbot() {
     certbot --nginx --non-interactive --agree-tos --email $EMAIL -d $DOMAIN
 }
 
+# Checkout repo in the worker home
+checkout_subgraph_repo() {
+    su - worker -c "git clone https://github.com/NeokingdomDAO/subgraph.git"
+}
+
+copy_root_keys_to_worker() {
+    # Ensure the .ssh directory exists for the worker user
+    mkdir -p ~worker/.ssh
+
+    # Copy the authorized_keys from root to worker
+    cp ~root/.ssh/authorized_keys ~worker/.ssh/
+
+    # Set the correct permissions for security
+    chmod 600 ~worker/.ssh/authorized_keys
+    chmod 700 ~worker/.ssh
+
+    # Set the owner of the files to the worker user
+    chown worker:worker -R ~worker/.ssh
+}
+
+# Utility functions
+
+# Helper function to check if a step is already done
+is_done() {
+    local step="$1"
+    if grep -q "$step" "$PROGRESS_FILE"; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+# Helper function to mark a step as done
+mark_done() {
+    local step="$1"
+    echo "$step" >>"$PROGRESS_FILE"
+}
+
+# Convert function name to a readable string
+func_to_description() {
+    echo "$1" | sed -e 's/_/ /g' -e 's/\b./\u&/g'
+}
+
 # Helper function to print boxed colored messages
 print_step() {
     local message="$1"
@@ -138,34 +189,31 @@ print_step() {
     printf "\e[34m+-$border-+\e[0m\n"  # Bottom border
 }
 
-# Check configuration
-print_step "Validating EMAIL and DOMAIN..."
-validate_variables
+# List of functions to call in order
+declare -a steps=(
+    "validate_variables"
+    "set_hostname"
+    "install_essentials"
+    "setup_firewall"
+    "add_worker_user"
+    "copy_root_keys_to_worker"
+    "install_docker"
+    "install_zsh"
+    "configure_tmux"
+    "checkout_subgraph_repo"
+    "install_node"
+    "install_configure_nginx"
+    "install_configure_certbot"
+)
 
-# Install and configure packages
-print_step "Installing essentials..."
-install_essentials
-
-print_step "Setting up firewall..."
-setup_firewall
-
-print_step "Adding worker user..."
-add_worker_user
-
-print_step "Installing Docker and Docker-Compose..."
-install_docker
-
-print_step "Installing and configuring ZSH..."
-install_zsh
-
-print_step "Configuring tmux..."
-configure_tmux
-
-print_step "Installing NodeJS and pnpm..."
-install_node
-
-print_step "Installing and configuring NGINX..."
-install_configure_nginx
-
-print_step "Installing and configuring Certbot..."
-install_configure_certbot
+# Iterate over the steps
+for func in "${steps[@]}"; do
+    message=$(func_to_description "$func")
+    if is_done "$func"; then
+        print_step "$message - skip"
+    else
+        print_step "$message"
+        $func
+        mark_done "$func"
+    fi
+done
